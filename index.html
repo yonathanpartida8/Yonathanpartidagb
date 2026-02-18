@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nuestro mismo cielo | Para mi universo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@200;300;400;600&family=Lora:italic,wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --night-sky: #050508;
+            --love-pink: #ff85a2;
+            --star-white: #ffffff;
+            --nebula-purple: #4a1d4d;
+            --glow: rgba(255, 133, 162, 0.5);
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--night-sky);
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* --- Canvas de Constelaciones --- */
+        #star-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #0f0c29 0%, #302b63 50%, #050508 100%);
+        }
+
+        /* --- Luces de Ambiente --- */
+        .ambient-light {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.3;
+            transition: transform 0.2s ease-out;
+        }
+
+        /* --- Reproductor de Música --- */
+        .music-island {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 380px;
+            background: rgba(10, 10, 15, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 12px 25px;
+            border: 1px solid rgba(255, 133, 162, 0.3);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+
+        .music-info { 
+            font-size: 0.65rem; 
+            letter-spacing: 2px; 
+            color: var(--love-pink); 
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        #playBtn {
+            background: var(--love-pink);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        /* --- Secciones --- */
+        section {
+            min-height: 110vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 25px;
+            position: relative;
+            text-align: center;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(3rem, 10vw, 4.5rem);
+            background: linear-gradient(to bottom, #fff 30%, var(--love-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-weight: 400;
+            font-size: 1.8rem;
+            color: var(--love-pink);
+            margin-bottom: 20px;
+        }
+
+        /* --- Cuadros de Mensaje --- */
+        .message-box {
+            background: var(--glass);
+            padding: 45px 30px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.08);
+            margin: 30px 0;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        p {
+            font-size: 1.05rem;
+            line-height: 1.9;
+            font-weight: 300;
+            margin-bottom: 20px;
+            color: #ececec;
+        }
+
+        .highlight {
+            color: var(--love-pink);
+            font-weight: 600;
+            text-shadow: 0 0 15px var(--glow);
+        }
+
+        /* --- El Nudo Visual --- */
+        .knot-container {
+            width: 180px;
+            height: 180px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .knot-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--love-pink);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 70%;
+            animation: morph 10s linear infinite;
+            filter: drop-shadow(0 0 10px var(--love-pink));
+        }
+
+        /* --- Botón Interactivo --- */
+        .unravel-btn {
+            background: rgba(255, 133, 162, 0.1);
+            border: 1px solid var(--love-pink);
+            color: white;
+            padding: 18px 35px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: 0.4s;
+            text-transform: uppercase;
+            margin-top: 20px;
+        }
+
+        .unravel-btn:hover {
+            background: var(--love-pink);
+            box-shadow: 0 0 30px var(--glow);
+        }
+
+        /* --- Scroll Hint --- */
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            font-size: 0.6rem;
+            letter-spacing: 5px;
+            opacity: 0.6;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-15px);} }
+        @keyframes morph {
+            0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 70%; transform: rotate(0deg); }
+            50% { border-radius: 70% 30% 30% 70% / 60% 40% 60% 40%; }
+            100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 70%; transform: rotate(360deg); }
+        }
+
+        footer {
+            padding: 120px 30px;
+            background: linear-gradient(to top, rgba(255, 133, 162, 0.15), transparent);
+            text-align: center;
+        }
+
+        .distance-tag {
+            font-size: 0.7rem;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="star-canvas"></canvas>
+    <div class="ambient-light" id="light1"></div>
+    <div class="ambient-light" id="light2"></div>
+
+    <div class="music-island">
+        <div class="music-info" id="song-name">Nuestra melodía</div>
+        <audio id="player" loop>
+            <source src="musica.mp3" type="audio/mpeg">
+        </audio>
+        <button onclick="togglePlay()" id="playBtn">▶</button>
+    </div>
+
+    <section>
+        <div class="reveal">
+            <span style="font-size: 3.5rem; display: block; margin-bottom: 20px; filter: drop-shadow(0 0 15px white);">✨</span>
+            <h1>Hola, Mi Amor</h1>
+            <p>Aunque nos separen los kilómetros,<br>estamos bajo el mismo lienzo de estrellas.</p>
+        </div>
+        <div class="scroll-hint">DESLIZA HACIA MÍ</div>
+    </section>
+
+    <section>
+        <div class="knot-container reveal">
+            <div class="knot-circle"></div>
+            <div class="knot-circle" style="animation-delay: -3s; border-color: white; opacity: 0.4; border-width: 1px;"></div>
+            <div style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); font-size: 2.5rem; filter: grayscale(0.5);">🧶</div>
+        </div>
+        <div class="message-box reveal">
+            <p>Sé que a veces la distancia hace que los pensamientos se <span class="highlight">enreden</span> más de la cuenta.</p>
+            <p>Que la ausencia física pesa y que tu cabecita se vuelve un lugar ruidoso. No importa cuántos mapas nos separen, mi calma viaja contigo.</p>
+        </div>
+    </section>
+
+<section>
+    <div class="message-box reveal" style="background: none; border: none; box-shadow: none;">
+        <h2>"Te siento aquí"</h2>
+        <p>Entiendo esos días donde el cansancio no es del cuerpo, sino del alma y mente. te entiendo muchote <span class="highlight">y te amo</span>.</p>
+        
+        <p>Si hoy tus ojos están nublados, déjame ser el viento que despeje tu cielo, pues tu no tienes que ser fuerte todo el tiempo, no conmigo.</p>
+        
+        <p>Sé que a veces sientes que tienes que poder con todo tú sola, pero quiero que te des permiso de soltar ese peso. Yo te leo, te siento y entiendo perfectamente ese nudo en el pecho aunque no digas ni una palabra. No estás exagerando, no es "tontería"; lo que sientes si me importa porque te importa a ti. Aquí puedes ser tú, sin filtros y sin armaduras, porque mi amor no solo es para tu versión alegre, sino también para esa versión tuya que hoy solo necesita un lugar seguro donde descansar y no voy a presionarte para que estés bien pronto, solo voy a acompañarte en tus dias oscuros y dias alegres, hasta que tú misma vuelvas a encontrar tu luz. No te soltare, yo aquí estoy para lo que sea para ti, siempre.</p>
+
+        <p>Amo tus días brillantes, pero <span class="highlight">adoro sostenerte</span> en tus días grises, porque ahí es donde tambien más nos pertenecemos.</p>
+    </div>
+</section>
+
+    <section>
+        <div class="reveal">
+            <h2 style="color: white;">¿Soltamos un peso juntos?</h2>
+            <p style="font-size: 0.95rem; opacity: 0.8; max-width: 300px; margin: 0 auto 30px;">Cierra los ojos, piensa en lo que te agobia y deja que el universo se lo lleve, mi amorcito.</p>
+            <button class="unravel-btn" onclick="unravel()">Deshacer un nudo</button>
+            <div id="unravel-msg" style="margin-top: 30px; font-family: 'Dancing Script', cursive; font-size: 1.8rem; color: var(--love-pink); min-height: 40px;"></div>
+        </div>
+    </section>
+
+    <section>
+        <div class="message-box reveal">
+            <p>Prometo que la distancia es solo <span class="highlight">un número</span>, no una barrera para mi amor por ti.</p>
+            <p>No estás sola en todo tu caos. Cada vez que sientas que no puedes más, recuerda que en algún lugar del mundo, hay alguien cuyo corazón late <span class="highlight">al ritmo del tuyo, y ese soy yo</span>.</p>
+            <p>Tu eres de mis prioridades, mi hogar. No importa lo lejos que estés, siempre estoy a un pensamiento de distancia.</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="reveal">
+            <span style="font-size: 4.5rem; display: block; margin-bottom: 20px;">🪐</span>
+            <h1>Yo estoy contigo</h1>
+            <p>En la distancia, en el silencio,<br>en el nudo y en la paz.</p>
+            <p style="font-family: 'Dancing Script', cursive; font-size: 2.2rem; color: var(--love-pink); margin-top: 20px;">Te amo infinito.</p>
+            <div class="distance-tag">Nuestro amor no conoce fronteras</div>
+        </div>
+    </footer>
+
+    <script>
+        // --- Configuración de Constelaciones ---
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let mouse = { x: null, y: null, radius: 100 };
+
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('touchstart', (e) => { 
+            mouse.x = e.touches[0].clientX; 
+            mouse.y = e.touches[0].clientY;
+            createExplosion(mouse.x, mouse.y); 
+        });
+
+        class Star {
+            constructor() {
+                this.init();
+            }
+            init() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 30) + 1;
+                this.opacity = Math.random();
+                this.blinkSpeed = Math.random() * 0.02 + 0.005;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            update() {
+                // Parpadeo
+                this.opacity += this.blinkSpeed;
+                if (this.opacity > 1 || this.opacity < 0.2) this.blinkSpeed = -this.blinkSpeed;
+
+                // Interacción con ratón/toque
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < mouse.radius) {
+                    let forceDirectionX = dx / distance;
+                    let forceDirectionY = dy / distance;
+                    let force = (mouse.radius - distance) / mouse.radius;
+                    let directionX = forceDirectionX * force * this.density;
+                    let directionY = forceDirectionY * force * this.density;
+                    this.x -= directionX;
+                    this.y -= directionY;
+                } else {
+                    if (this.x !== this.baseX) {
+                        let dx = this.x - this.baseX;
+                        this.x -= dx / 20;
+                    }
+                    if (this.y !== this.baseY) {
+                        let dy = this.y - this.baseY;
+                        this.y -= dy / 20;
+                    }
+                }
+            }
+        }
+
+        function initStars() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            let numberOfStars = (canvas.width * canvas.height) / 8000;
+            for (let i = 0; i < numberOfStars; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function connect() {
+            for (let a = 0; a < stars.length; a++) {
+                for (let b = a; b < stars.length; b++) {
+                    let dx = stars[a].x - stars[b].x;
+                    let dy = stars[a].y - stars[b].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 100) {
+                        let opacity = 1 - (distance / 100);
+                        ctx.strokeStyle = `rgba(255, 133, 162, ${opacity * 0.2})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(stars[a].x, stars[a].y);
+                        ctx.lineTo(stars[b].x, stars[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            connect();
+            requestAnimationFrame(animate);
+        }
+
+        // --- Explosión de Luz al Tocar ---
+        function createExplosion(x, y) {
+            for(let i=0; i<8; i++) {
+                const flare = document.createElement('div');
+                flare.className = 'ambient-light';
+                flare.style.width = '100px';
+                flare.style.height = '100px';
+                flare.style.left = (x - 50) + 'px';
+                flare.style.top = (y - 50) + 'px';
+                flare.style.background = 'radial-gradient(circle, white 0%, var(--love-pink) 50%, transparent 70%)';
+                flare.style.opacity = '0.8';
+                flare.style.transition = 'all 0.8s ease-out';
+                document.body.appendChild(flare);
+                
+                setTimeout(() => {
+                    flare.style.transform = `translate(${(Math.random()-0.5)*200}px, ${(Math.random()-0.5)*200}px) scale(0)`;
+                    flare.style.opacity = '0';
+                }, 10);
+                setTimeout(() => flare.remove(), 800);
+            }
+        }
+
+        // --- Lógica de Scroll ---
+        function reveal() {
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(r => {
+                const elementTop = r.getBoundingClientRect().top;
+                if (elementTop < window.innerHeight - 100) r.classList.add('active');
+            });
+            
+            // Mover luces de fondo con el scroll
+            const scrollPercent = window.scrollY / (document.body.offsetHeight - window.innerHeight);
+            document.getElementById('light1').style.transform = `translate(${scrollPercent * 100}px, ${scrollPercent * 200}px)`;
+            document.getElementById('light2').style.transform = `translate(-${scrollPercent * 100}px, -${scrollPercent * 200}px)`;
+        }
+
+        // --- Música ---
+        const player = document.getElementById('player');
+        const btn = document.getElementById('playBtn');
+        function togglePlay() {
+            if (player.paused) {
+                player.play();
+                btn.innerHTML = "⏸";
+                btn.style.boxShadow = "0 0 20px var(--love-pink)";
+            } else {
+                player.pause();
+                btn.innerHTML = "▶";
+                btn.style.boxShadow = "none";
+            }
+        }
+
+        // --- Mensajes del Botón ---
+                function unravel() {
+            const msgs = [
+                "Acabo de enviarte un abrazo invisible... ¿te llegó?",
+                "Un kilómetro menos en tu mente, un paso más cerca de ti.",
+                "Respira... yo sostengo este pensamiento por ti.",
+                "Eres más fuerte que cualquier distancia.",
+                "Mi corazón no entiende de mapas, solo de ti.",
+                "Todo estará bien, mi vida. Estoy aquí.",
+                "Cierra los ojos un segundo... ahí es donde siempre estamos juntos.",
+                "No importa el GPS, todos mis caminos terminan en ti.",
+                "Suelta esa carga un momento, yo la cuido por ti.",
+                "Un paso a la vez, un suspiro a la vez. Lo estás haciendo bien.",
+                "Si el pensamiento fuera un puente, ya estaría a tu lado.",
+                "Tu paz es mi lugar favorito en el mundo.",
+                "Eres el 'clic' que hace que mi mundo tenga sentido.",
+                "Incluso en el silencio, te estoy queriendo fuerte.",
+                "Que este mensaje sea el recordatorio de que no caminas a solas."
+            ];
+            const display = document.getElementById('unravel-msg');
+            display.style.opacity = 0;
+            setTimeout(() => {
+                display.innerText = msgs[Math.floor(Math.random()*msgs.length)];
+                display.style.opacity = 1;
+            }, 300);
+        }
+
+        initStars();
+        animate();
+        window.addEventListener('scroll', reveal);
+        window.addEventListener('resize', initStars);
+    </script>
+</body>
+</html>
